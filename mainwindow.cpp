@@ -1,13 +1,17 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QDebug>
-#include <QSqlRecord>
+
+using namespace std::placeholders;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    connect(ui->pushButton, &QPushButton::clicked, this, &MainWindow::submit_all);
+
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName("gocator123.sqlite");
     if (!db.open()) {
@@ -21,20 +25,19 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QTableView *view = new QTableView;
     view->setModel(table_);
-//    view->resizeColumnsToContents();
+    view->resizeColumnsToContents();
     ui->centralWidget->layout()->addWidget(view);
 
     mapper_ = new QDataWidgetMapper(this);
     mapper_->setSubmitPolicy(QDataWidgetMapper::AutoSubmit);
     mapper_->setModel(table_);
 
-    Mapping(ui->ip, table_, std::bind(&MainWindow::ip_slot, this));
-//    Mapping(ui->is_external_start_trigger, table_);
-//    Mapping(ui->scan_rate, table_);
-//    Mapping(ui->trigger_mode, table_);
-//    Mapping(ui->exposure_time, table_);
+    Mapping(ui->ip, std::bind(&MainWindow::ip_slot, this, _1));
+    Mapping(ui->is_external_start_trigger, std::bind(&MainWindow::start_trigger_slot, this, _1));
+    Mapping(ui->scan_rate, std::bind(&MainWindow::scan_rate_slot, this, _1));
+    Mapping(ui->trigger_mode, std::bind(&MainWindow::trigger_mode_slot, this, _1));
+    Mapping(ui->exposure_time, std::bind(&MainWindow::exposure_time_slot, this, _1));
 
-//    table_->select();
     mapper_->toFirst();
 }
 
@@ -43,18 +46,45 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::Mapping(QWidget* widget, QSqlTableModel* table, std::function<void()> slot)
+void MainWindow::Mapping(QWidget* widget, const std::function<void(const QVariant&)>& slot)
 {
-    mapper_->addMapping(widget, table->fieldIndex(widget->objectName()));
-    connect(ui->pushButton, &QPushButton::clicked, this, slot);
+    int table_index = table_->fieldIndex(widget->objectName());
+    qDebug() << table_index;
+    mapper_->addMapping(widget, table_index);
+    connect(table_, &QSqlTableModel::dataChanged,
+            [=](const QModelIndex& left, const QModelIndex& right, const QVector<int> role){
+                if ((left != right) || (table_index != left.column())) return;
+                slot(left.data());
+            }
+    );
 }
 
-void MainWindow::ip_slot()
+void MainWindow::ip_slot(const QVariant& data)
 {
-    qDebug() << "hei";
+    qDebug() << "ip_slot:" << data;
 }
 
-void MainWindow::scan_rate_slot()
+void MainWindow::scan_rate_slot(const QVariant& data)
 {
+    qDebug() << "scan_rate:" << data;
+}
 
+void MainWindow::start_trigger_slot(const QVariant &data)
+{
+    qDebug() << "start_trigger:" << data;
+}
+
+void MainWindow::trigger_mode_slot(const QVariant &data)
+{
+    qDebug() << "trigger_mode:" << data;
+}
+
+void MainWindow::exposure_time_slot(const QVariant &data)
+{
+    qDebug() << "exposure_time:" << data;
+}
+
+void MainWindow::submit_all()
+{
+    mapper_->submit();
 }
