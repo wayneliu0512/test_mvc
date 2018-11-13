@@ -8,12 +8,13 @@
 #include <QTableView>
 #include <QModelIndex>
 #include <QVector>
+#include <g4_core.h>
 
 namespace Ui {
 class MainWindow;
 }
 
-class MainWindow : public QMainWindow
+class MainWindow : public QMainWindow, public G4Object
 {
     Q_OBJECT
 
@@ -26,14 +27,10 @@ private slots:
     void start_trigger_slot(const QVariant& data);
     void trigger_mode_slot(const QVariant& data);
     void exposure_time_slot(const QVariant& data);
-    void submit_all();
+protected:
+    void AddMappingToDb(QMap<QWidget*, _SLOT_type>& container) override;
 private:
     Ui::MainWindow *ui;
-    QSqlTableModel *table_;
-    QDataWidgetMapper *mapper_;
-
-    void Mapping(QWidget* widget,
-                 const std::function<void (const QVariant &)> &slot);
 };
 
 #endif // MAINWINDOW_H
