@@ -7,6 +7,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    connect(ui->pushButton, &QPushButton::clicked, this, &MainWindow::submitAll);
 }
 
 MainWindow::~MainWindow()
@@ -46,4 +47,9 @@ void MainWindow::trigger_mode_slot(const QVariant &data)
 void MainWindow::exposure_time_slot(const QVariant &data)
 {
     qDebug() << "exposure_time:" << data;
+}
+
+void MainWindow::submitAll()
+{
+    setModelData(ui->ip, "field test");
 }

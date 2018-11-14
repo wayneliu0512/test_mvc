@@ -27,6 +27,7 @@ private slots:
     void start_trigger_slot(const QVariant& data);
     void trigger_mode_slot(const QVariant& data);
     void exposure_time_slot(const QVariant& data);
+    void submitAll();
 protected:
     void AddMappingToDb(QMap<QWidget*, _SLOT_type>& container) override;
 private:
